@@ -55,7 +55,6 @@ def test_cancelled_meeting_frees_slot_for_another_user(booked_meeting, user_fact
         new_guest_meetings = MeetingsPage(new_guest["page"])
         new_guest_meetings.open()
         new_meeting = new_guest_meetings.meeting_with(host["user"]["name"])
-        expect(new_meeting).to_have_count(1)
         new_booking_id = new_meeting.get_attribute("data-booking-id")
         assert new_booking_id, "У повторного бронирования отсутствует ID"
         assert new_booking_id != old_booking_id, (

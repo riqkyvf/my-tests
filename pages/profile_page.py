@@ -30,25 +30,13 @@ class ProfilePage:
         self.skill_input.fill(name)
         self.type_skill.select_option(value=skill_type)
 
-        with self.page.expect_response(
-            lambda response: (
-                response.url == f"{BASE_URL}/pomidorqa/profile"
-                and response.request.method == "POST"
-            ),
-            timeout=REQUEST_TIMEOUT_MS,
-        ):
+        with self._expect_form_response():
             self.add_skill_button.click()
 
     def remove_skill(self, skill_name: str, skill_type: str):
         skill = self.saved_skill(skill_name, skill_type)
 
-        with self.page.expect_response(
-            lambda response: (
-                response.url == f"{BASE_URL}/pomidorqa/profile"
-                and response.request.method == "POST"
-            ),
-            timeout=REQUEST_TIMEOUT_MS,
-        ):
+        with self._expect_form_response():
             skill.get_by_role("button", name=f"Убрать {skill_name}", exact=True).click()
 
     def saved_skill(self, skill_name: str, skill_type: str):
@@ -63,15 +51,14 @@ class ProfilePage:
         )
 
     def save(self):
-        with self.page.expect_response(
+        with self._expect_form_response():
+            self.save_button.click()
+
+    def _expect_form_response(self):
+        return self.page.expect_response(
             lambda response: (
                 response.url == f"{BASE_URL}/pomidorqa/profile"
                 and response.request.method == "POST"
             ),
             timeout=REQUEST_TIMEOUT_MS,
-        ) as response_info:
-            self.save_button.click()
-
-        response = response_info.value
-        # Next.js может вернуть перенаправление после обработки формы.
-        assert response.status in (200, 303), f"Сохранение профиля: HTTP {response.status}"
+        )

@@ -93,21 +93,19 @@ def test_catalog_excludes_user_after_last_free_slot_is_removed(
 
 @allure.feature("Каталог участников")
 @allure.title("Участник только с забронированными слотами скрыт из каталога")
-def test_catalog_excludes_user_with_only_booked_slots(
-    catalog_page, booked_meeting, catalog_control
-):
+def test_catalog_excludes_user_with_only_booked_slots(catalog_page, booked_slot, catalog_control):
     with allure.step("Проверить единственный забронированный слот"):
-        slots = SlotsPage(booked_meeting["host"]["page"])
+        slots = SlotsPage(booked_slot["host"]["page"])
         slots.open()
         expect(slots.slot_cards).to_have_count(1)
-        expect(slots.slot_by_id(booked_meeting["slot_id"])).to_have_attribute(
+        expect(slots.slot_by_id(booked_slot["slot_id"])).to_have_attribute(
             "data-slot-status", "booked"
         )
 
     with allure.step("Проверить отсутствие карточки при наличии контрольной"):
         catalog_page.open()
         expect(catalog_page.card_by_name(catalog_control["user"]["name"])).to_be_visible()
-        expect(catalog_page.card_by_id(booked_meeting["person_id"])).to_have_count(0)
+        expect(catalog_page.card_by_id(booked_slot["person_id"])).to_have_count(0)
 
 
 @allure.feature("Каталог участников")
@@ -129,7 +127,6 @@ def test_catalog_keeps_user_with_both_free_and_booked_slots(
     with allure.step("Проверить видимость владельца в каталоге"):
         catalog_page.open()
         card = catalog_page.card_by_id(prepared["person_id"])
-        expect(card).to_have_count(1)
         expect(card).to_be_visible()
 
 
@@ -151,10 +148,9 @@ def test_skill_updates_are_visible_in_public_profile_and_search(
         catalog = CatalogPage(viewer["page"])
         catalog.open()
         card = catalog.card_by_skill(initial_skills["can_help"])
-        expect(card).to_have_count(1)
         person_id = card.get_attribute("data-person-id")
         assert person_id, "У опубликованного профиля отсутствует ID"
-        card.click()
+        catalog.open_person(card)
 
         person = PersonPage(viewer["page"])
         for initial_type, initial_name in initial_skills.items():

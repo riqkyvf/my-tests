@@ -1,6 +1,8 @@
-from playwright.sync_api import Page
+from urllib.parse import urljoin
 
-from config import BASE_URL
+from playwright.sync_api import Locator, Page
+
+from config import BASE_URL, REQUEST_TIMEOUT_MS
 
 
 class CatalogPage:
@@ -15,6 +17,14 @@ class CatalogPage:
 
     def open(self):
         self.page.goto(f"{BASE_URL}/pomidorqa")
+
+    def open_person(self, card: Locator):
+        href = card.get_attribute("href")
+        if not href:
+            raise ValueError("У карточки участника отсутствует ссылка на профиль")
+        target_url = urljoin(self.page.url, href)
+        card.click()
+        self.page.wait_for_url(target_url, timeout=REQUEST_TIMEOUT_MS)
 
     def search_by_skill(self, skill_name: str):
         self.skill_input.fill(skill_name)

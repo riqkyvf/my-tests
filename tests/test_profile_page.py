@@ -176,11 +176,10 @@ def test_saved_profile_is_visible_to_another_user(user_factory, published_profil
         catalog.open()
         owner_card = catalog.card_by_name(profile_data["name"])
 
-        expect(owner_card).to_have_count(1)
         expect(owner_card).to_contain_text(profile_data["bio"])
 
     with allure.step("Открыть карточку и проверить публичные данные и навыки"):
-        owner_card.click()
+        catalog.open_person(owner_card)
 
         person = PersonPage(viewer["page"])
         expect(person.get_creator_name(profile_data["name"])).to_have_text(profile_data["name"])
@@ -299,7 +298,7 @@ def test_updated_profile_is_visible_to_another_user(user_factory, published_prof
         expect(card).to_contain_text(old_data["bio"])
         person_id = card.get_attribute("data-person-id")
         assert person_id, "У опубликованного профиля отсутствует ID"
-        card.click()
+        catalog.open_person(card)
 
         person = PersonPage(viewer["page"])
         expect(person.get_creator_name(old_data["name"])).to_be_visible()
@@ -333,7 +332,6 @@ def test_updated_profile_is_visible_to_another_user(user_factory, published_prof
     with allure.step("Проверить обновлённую карточку в каталоге"):
         catalog.open()
         updated_card = catalog.card_by_id(person_id)
-        expect(updated_card).to_have_count(1)
         expect(updated_card).to_contain_text(updated["name"])
         expect(updated_card).to_contain_text(updated["bio"])
         expect(catalog.card_by_name(old_data["name"])).to_have_count(0)

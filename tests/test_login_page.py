@@ -24,7 +24,9 @@ def test_login_with_invalid_credentials(page: Page, login_page):
 
 @allure.feature("Авторизация")
 @allure.title("Участник входит с правильными email и паролем")
-def test_login_with_valid_credentials(page: Page, created_account, login_page, header):
+def test_login_with_valid_credentials(
+    page: Page, created_account, login_page, header, profile_page
+):
     user = created_account["user"]
 
     with allure.step("Открыть страницу входа"):
@@ -36,6 +38,10 @@ def test_login_with_valid_credentials(page: Page, created_account, login_page, h
     with allure.step("Проверить успешный вход"):
         expect(page).to_have_url(f"{BASE_URL}/pomidorqa")
         expect(header.logout_button).to_be_visible()
+
+    with allure.step("Проверить профиль вошедшего пользователя"):
+        profile_page.open()
+        expect(profile_page.name_input).to_have_value(user["name"])
 
 
 @allure.feature("Авторизация")

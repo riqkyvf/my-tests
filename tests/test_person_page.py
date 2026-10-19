@@ -22,7 +22,7 @@ def test_anonymous_guest_sees_public_slot_but_must_log_in_to_book(
         catalog_page.open()
         expect(header.login_link).to_be_visible()
         expect(header.logout_button).to_be_hidden()
-        catalog_page.card_by_name(owner["user"]["name"]).click()
+        catalog_page.open_person(catalog_page.card_by_name(owner["user"]["name"]))
 
     with allure.step("Проверить владельца и свободный слот"):
         person = PersonPage(page)

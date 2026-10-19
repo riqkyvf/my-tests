@@ -240,8 +240,8 @@ def published_profile(available_person_factory):
 
 
 @pytest.fixture
-def booked_meeting_factory(available_person_factory, user_factory):
-    def create_meeting(*, starts_at=None):
+def booked_slot_factory(available_person_factory, user_factory):
+    def create_booked_slot(*, starts_at=None):
         skill_name = f"cancel-{uuid.uuid4().hex}"
         slot_options = {}
         if starts_at is not None:
@@ -263,13 +263,38 @@ def booked_meeting_factory(available_person_factory, user_factory):
         expect(host_card).to_have_count(1)
         person_id = host_card.get_attribute("data-person-id")
         assert person_id, "У карточки участника отсутствует ID"
-        host_card.click()
+        catalog.open_person(host_card)
 
         person = PersonPage(guest["page"])
         person.select_slot(prepared["slot_date"], prepared["slot_time"])
         expect(person.booking_slot_id).to_have_value(prepared["slot_id"])
         success_message = person.confirm_booking_and_close()
         assert "Забронировано!" in success_message
+
+        return {
+            "host": host,
+            "guest": guest,
+            "person_id": person_id,
+            "slot_id": prepared["slot_id"],
+            "slot_date": prepared["slot_date"],
+            "slot_time": prepared["slot_time"],
+            "starts_at": starts_at,
+        }
+
+    return create_booked_slot
+
+
+@pytest.fixture
+def booked_slot(booked_slot_factory):
+    return booked_slot_factory()
+
+
+@pytest.fixture
+def booked_meeting_factory(booked_slot_factory):
+    def create_meeting(*, starts_at=None):
+        prepared = booked_slot_factory(starts_at=starts_at)
+        host = prepared["host"]
+        guest = prepared["guest"]
 
         meetings = MeetingsPage(guest["page"])
         meetings.open()
@@ -283,16 +308,7 @@ def booked_meeting_factory(available_person_factory, user_factory):
         expect(slots.slot_by_id(prepared["slot_id"])).to_have_attribute(
             "data-slot-status", "booked"
         )
-        return {
-            "host": host,
-            "guest": guest,
-            "person_id": person_id,
-            "slot_id": prepared["slot_id"],
-            "slot_date": prepared["slot_date"],
-            "slot_time": prepared["slot_time"],
-            "booking_id": booking_id,
-            "starts_at": starts_at,
-        }
+        return {**prepared, "booking_id": booking_id}
 
     return create_meeting
 
@@ -352,30 +368,28 @@ def catalog_candidate_with_slot(available_person_factory):
 
 
 @pytest.fixture
-def public_profile_with_booked_slot(request, booked_meeting):
-    host = booked_meeting["host"]
+def public_profile_with_booked_slot(request, booked_slot):
+    host = booked_slot["host"]
     slots = SlotsPage(host["page"])
     slots.open()
     same_day = getattr(request, "param", "different_days") == "same_day"
-    free_day = date.fromisoformat(booked_meeting["slot_date"])
+    free_day = date.fromisoformat(booked_slot["slot_date"])
     if not same_day:
         free_day += timedelta(days=1)
     free_date = free_day.isoformat()
     free_time = "12:10"
-    slots.create_slot_and_wait(free_date, free_time)
+    slots.create_slot(free_date, free_time)
     expect(slots.slot_cards).to_have_count(2)
     expect(slots.free_slot_cards).to_have_count(1)
     expect(slots.free_slot_cards).to_contain_text(free_time)
-    expect(slots.slot_by_id(booked_meeting["slot_id"])).to_have_attribute(
-        "data-slot-status", "booked"
-    )
+    expect(slots.slot_by_id(booked_slot["slot_id"])).to_have_attribute("data-slot-status", "booked")
     free_id = slots.free_slot_cards.get_attribute("data-slot-id")
     assert free_id, "У контрольного свободного слота отсутствует ID"
     return {
         "host": host,
-        "person_id": booked_meeting["person_id"],
-        "booked_slot_id": booked_meeting["slot_id"],
-        "booked_slot_date": booked_meeting["slot_date"],
+        "person_id": booked_slot["person_id"],
+        "booked_slot_id": booked_slot["slot_id"],
+        "booked_slot_date": booked_slot["slot_date"],
         "free_slot_id": free_id,
         "free_slot_date": free_date,
         "free_slot_time": free_time,
@@ -455,7 +469,7 @@ def person_with_multiple_free_slots(available_person_factory):
 
     for slot_date, slot_time in planned[1:]:
         previous_ids = set(slots.slot_ids())
-        slots.create_slot_and_wait(slot_date, slot_time)
+        slots.create_slot(slot_date, slot_time)
         expect(slots.slot_cards).to_have_count(len(created) + 1)
         new_ids = set(slots.slot_ids()) - previous_ids
         assert len(new_ids) == 1, "Должен появиться ровно один новый слот"
@@ -469,8 +483,14 @@ def person_with_multiple_free_slots(available_person_factory):
 
 
 @pytest.fixture(
-    params=[ProfilePage, SlotsPage, MeetingsPage],
+    params=[
+        (ProfilePage, "/pomidorqa/profile", "name_input"),
+        (SlotsPage, "/pomidorqa/profile/slots", "date_input"),
+        (MeetingsPage, "/pomidorqa/bookings", "upcoming"),
+    ],
     ids=["profile", "slots", "meetings"],
 )
 def protected_page(request, page):
-    return request.param(page)
+    page_class, path, content_attribute = request.param
+    view = page_class(page)
+    return view, f"{BASE_URL}{path}", getattr(view, content_attribute)

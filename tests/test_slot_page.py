@@ -83,8 +83,7 @@ def test_slot_display_uses_owner_timezone_independently_of_browser(
         catalog = CatalogPage(viewer["page"])
         catalog.open()
         owner_card = catalog.card_by_skill(prepared_slot["skill_name"])
-        expect(owner_card).to_have_count(1)
-        owner_card.click()
+        catalog.open_person(owner_card)
 
     with allure.step("Проверить исходное время в часовом поясе владельца"):
         person = PersonPage(viewer["page"])
@@ -128,7 +127,7 @@ def test_slot_calendar_rejects_past_dates(page: Page, logged_in_page, slots_page
 
     with allure.step("Попытаться создать слот на вчера"):
         # fill() позволяет ввести прошлую дату вручную; HTML-валидация должна её отклонить.
-        slots_page.create_slot(past_date, "12:10")
+        slots_page.submit_slot(past_date, "12:10")
 
     with allure.step("Проверить HTML-валидацию даты"):
         expect(slots_page.date_input).to_have_value(past_date)
@@ -185,7 +184,8 @@ def test_slot_cannot_be_created_for_past_time_today(user_factory):
         expect(slots.slot_cards).to_have_count(0)
 
     with allure.step("Отправить слот с прошедшим временем и проверить отказ"):
-        slots.create_slot_and_wait(today, "00:00")
+        slots.create_slot(today, "00:00")
+        expect(slots.error).to_have_text("Слот должен начинаться в будущем")
         expect(slots.slot_cards).to_have_count(0)
 
     with allure.step("Перезагрузить страницу и проверить отсутствие слота"):

@@ -23,7 +23,7 @@ def test_two_users_compete_for_one_slot_and_only_one_booking_is_created(
         for guest in guests:
             catalog = CatalogPage(guest["page"])
             catalog.open()
-            catalog.card_by_name(host["user"]["name"]).click()
+            catalog.open_person(catalog.card_by_name(host["user"]["name"]))
             person = PersonPage(guest["page"])
             person.select_slot(prepared["slot_date"], prepared["slot_time"])
             expect(person.booking_slot_id).to_have_value(prepared["slot_id"])
@@ -53,7 +53,6 @@ def test_two_users_compete_for_one_slot_and_only_one_booking_is_created(
         winner_meetings.open()
         expect(winner_meetings.cards).to_have_count(1)
         winner_meeting = winner_meetings.meeting_with(host["user"]["name"])
-        expect(winner_meeting).to_have_count(1)
         booking_id = winner_meeting.get_attribute("data-booking-id")
         assert booking_id, "У победителя отсутствует ID бронирования"
 

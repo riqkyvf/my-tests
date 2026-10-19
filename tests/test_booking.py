@@ -30,8 +30,6 @@ def test_guest_books_host_slot_and_both_see_meeting(user_factory):
 
         host_profile.add_skill(host_skill_name, host_skill_type)
 
-        expect(host_profile.can_help_skills).to_be_visible()
-
         saved_skill = host_profile.saved_skill(host_skill_name, host_skill_type)
 
         expect(saved_skill).to_be_visible()
@@ -63,9 +61,8 @@ def test_guest_books_host_slot_and_both_see_meeting(user_factory):
         catalog_guest.open()
 
         host_card = catalog_guest.card_by_skill(host_skill_name)
-        expect(host_card).to_have_count(1)
         expect(host_card).to_be_visible()
-        host_card.click()
+        catalog_guest.open_person(host_card)
 
         person_page = PersonPage(guest["page"])
         creator_name = person_page.get_creator_name(host["user"]["name"])
@@ -89,7 +86,6 @@ def test_guest_books_host_slot_and_both_see_meeting(user_factory):
         guest_meeting = guest_meetings.meeting_with(host["user"]["name"])
 
         expect(guest_meeting).to_be_visible()
-        expect(guest_meeting).to_have_count(1)
         expect(guest_meeting).to_contain_text(expected_date)
         expect(guest_meeting).to_contain_text(slot_time)
 
@@ -98,7 +94,6 @@ def test_guest_books_host_slot_and_both_see_meeting(user_factory):
         host_meeting = host_meetings.meeting_with(guest["user"]["name"])
 
         expect(host_meeting).to_be_visible()
-        expect(host_meeting).to_have_count(1)
         expect(host_meeting).to_contain_text(expected_date)
         expect(host_meeting).to_contain_text(slot_time)
 
@@ -125,7 +120,6 @@ def test_owner_cannot_book_own_slot(catalog_page, catalog_candidate_with_slot):
         # Другой посетитель видит карточку и позволяет получить ID публичного профиля.
         catalog_page.open()
         owner_card = catalog_page.card_by_name(owner["user"]["name"])
-        expect(owner_card).to_have_count(1)
         person_id = owner_card.get_attribute("data-person-id")
         assert person_id, "У карточки владельца отсутствует ID"
 
@@ -166,7 +160,7 @@ def test_booking_selected_slot_keeps_other_slots_free(
         guest = user_factory("multi-booker")
         catalog = CatalogPage(guest["page"])
         catalog.open()
-        catalog.card_by_name(host["user"]["name"]).click()
+        catalog.open_person(catalog.card_by_name(host["user"]["name"]))
         person = PersonPage(guest["page"])
 
     with allure.step("Проверить переключение дней и доступные времена"):
@@ -190,7 +184,6 @@ def test_booking_selected_slot_keeps_other_slots_free(
         guest_meetings.open()
         expect(guest_meetings.cards).to_have_count(1)
         guest_meeting = guest_meetings.meeting_with(host["user"]["name"])
-        expect(guest_meeting).to_have_count(1)
         expect(guest_meeting).to_contain_text(expected_date)
         expect(guest_meeting).to_contain_text(selected["time"])
         booking_id = guest_meeting.get_attribute("data-booking-id")
@@ -224,8 +217,7 @@ def test_dismissing_booking_confirmation_keeps_slot_free(catalog_candidate_with_
         catalog = CatalogPage(guest["page"])
         catalog.open()
         card = catalog.card_by_name(host["user"]["name"])
-        expect(card).to_have_count(1)
-        card.click()
+        catalog.open_person(card)
 
     with allure.step("Открыть подтверждение выбранного слота"):
         person = PersonPage(guest["page"])

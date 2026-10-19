@@ -1,3 +1,6 @@
 /allure-results/
 /allure-report/
 /.ruff_cache/
+__pycache__/
+*.pyc
+pytestdebug.log

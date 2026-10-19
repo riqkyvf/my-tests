@@ -1,6 +1,6 @@
 # Матрица покрытия PomidorQA
 
-Дата сверки: **19.10.2026**. Источник: [requirements.md](C:/Users/Evgeniy/Desktop/POMO/my-tests/requirements.md).
+Дата сверки: **19.10.2026**. Источник: [requirements.md](requirements.md).
 
 В Python-проекте собрано **74 тестовых случаев** для Chromium с учётом параметризации
 (`pytest --collect-only`, без выполнения сценариев). В них **49 тестовых функций**.
@@ -42,7 +42,7 @@ ID R/O/A введены только для этой матрицы; в исхо
 | R4.4 | Пароль при регистрации обязателен: 0 символов отклоняется | Автоматизировано | [T29](#t29) | Параметр missing_password. |
 | R4.5 | Пароль не короче 8 символов: 7 отклоняется, 8 и 9 принимаются | Автоматизировано | [T30](#t30), [T28](#t28) | Нижняя граница покрыта через UI. Серверная проверка при обходе HTML-валидации отдельно не проверяется. |
 | R4.6 | После UI-регистрации профиль получает имя из формы и Europe/Moscow | Автоматизировано | [T28](#t28) | Профиль открывается уже после регистрации; значения сверяются с формой и требованиями. |
-| R4.7 | Вход с верными email и паролем успешен | Автоматизировано | [T13](#t13) | Аккаунт для предусловия создаётся через API; вход выполняется через UI. |
+| R4.7 | Вход с верными email и паролем успешен | Автоматизировано | [T13](#t13) | Аккаунт для предусловия создаётся через API; вход выполняется через UI. После входа проверяется уникальное имя пользователя в его профиле. |
 | R4.8 | Неверный email и неверный пароль дают одинаковую общую ошибку | Автоматизировано | [T12](#t12), [T14](#t14) | Оба теста ожидают «Неверный email или пароль». |
 
 ### Профиль — §5
@@ -195,247 +195,247 @@ UI-поиск со второго аккаунта → бронь → встре
 
 <a id="t01"></a>
 
-- **T01** — [test_created_account_has_session_cookie](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_account_api.py:6)
+- **T01** — [test_created_account_has_session_cookie](tests/test_account_api.py#L6)
   - `tests/test_account_api.py::test_created_account_has_session_cookie`
 
 <a id="t02"></a>
 
-- **T02** — [test_guest_books_host_slot_and_both_see_meeting](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_booking.py:18)
+- **T02** — [test_guest_books_host_slot_and_both_see_meeting](tests/test_booking.py#L18)
   - `tests/test_booking.py::test_guest_books_host_slot_and_both_see_meeting`
 
 <a id="t03"></a>
 
-- **T03** — [test_owner_cannot_book_own_slot](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_booking.py:120)
+- **T03** — [test_owner_cannot_book_own_slot](tests/test_booking.py#L115)
   - `tests/test_booking.py::test_owner_cannot_book_own_slot`
 
 <a id="t04"></a>
 
-- **T04** — [test_cancelled_meeting_frees_slot_for_another_user](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_booking_cancellation.py:16)
+- **T04** — [test_cancelled_meeting_frees_slot_for_another_user](tests/test_booking_cancellation.py#L16)
   - `tests/test_booking_cancellation.py::test_cancelled_meeting_frees_slot_for_another_user`
 
 <a id="t05"></a>
 
-- **T05** — [test_cancellation_respects_two_hour_deadline](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_booking_cancellation.py:92)
+- **T05** — [test_cancellation_respects_two_hour_deadline](tests/test_booking_cancellation.py#L91)
   - `tests/test_booking_cancellation.py::test_cancellation_respects_two_hour_deadline`
 
 <a id="t06"></a>
 
-- **T06** — [test_two_users_compete_for_one_slot_and_only_one_booking_is_created](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_booking_race.py:14)
+- **T06** — [test_two_users_compete_for_one_slot_and_only_one_booking_is_created](tests/test_booking_race.py#L14)
   - `tests/test_booking_race.py::test_two_users_compete_for_one_slot_and_only_one_booking_is_created`
 
 <a id="t07"></a>
 
-- **T07** — [test_catalog_search_finds_people_by_can_help_skill](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_catalog_page.py:17)
+- **T07** — [test_catalog_search_finds_people_by_can_help_skill](tests/test_catalog_page.py#L17)
   - `tests/test_catalog_page.py::test_catalog_search_finds_people_by_can_help_skill`
 
 <a id="t08"></a>
 
-- **T08** — [test_catalog_excludes_current_user](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_catalog_page.py:40)
+- **T08** — [test_catalog_excludes_current_user](tests/test_catalog_page.py#L40)
   - `tests/test_catalog_page.py::test_catalog_excludes_current_user`
 
 <a id="t09"></a>
 
-- **T09** — [test_catalog_excludes_user_without_slots](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_catalog_page.py:56)
+- **T09** — [test_catalog_excludes_user_without_slots](tests/test_catalog_page.py#L56)
   - `tests/test_catalog_page.py::test_catalog_excludes_user_without_slots`
 
 <a id="t10"></a>
 
-- **T10** — [test_catalog_excludes_user_after_last_free_slot_is_removed](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_catalog_page.py:71)
+- **T10** — [test_catalog_excludes_user_after_last_free_slot_is_removed](tests/test_catalog_page.py#L71)
   - `tests/test_catalog_page.py::test_catalog_excludes_user_after_last_free_slot_is_removed`
 
 <a id="t11"></a>
 
-- **T11** — [test_catalog_excludes_user_with_only_booked_slots](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_catalog_page.py:96)
+- **T11** — [test_catalog_excludes_user_with_only_booked_slots](tests/test_catalog_page.py#L96)
   - `tests/test_catalog_page.py::test_catalog_excludes_user_with_only_booked_slots`
 
 <a id="t12"></a>
 
-- **T12** — [test_login_with_invalid_credentials](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_login_page.py:11)
+- **T12** — [test_login_with_invalid_credentials](tests/test_login_page.py#L11)
   - `tests/test_login_page.py::test_login_with_invalid_credentials`
 
 <a id="t13"></a>
 
-- **T13** — [test_login_with_valid_credentials](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_login_page.py:27)
+- **T13** — [test_login_with_valid_credentials](tests/test_login_page.py#L27)
   - `tests/test_login_page.py::test_login_with_valid_credentials`
 
 <a id="t14"></a>
 
-- **T14** — [test_login_with_invalid_password](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_login_page.py:43)
+- **T14** — [test_login_with_invalid_password](tests/test_login_page.py#L49)
   - `tests/test_login_page.py::test_login_with_invalid_password`
 
 <a id="t15"></a>
 
-- **T15** — [test_logout](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_login_page.py:63)
+- **T15** — [test_logout](tests/test_login_page.py#L69)
   - `tests/test_login_page.py::test_logout`
 
 <a id="t16"></a>
 
-- **T16** — [test_anonymous_guest_sees_public_slot_but_must_log_in_to_book](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_person_page.py:14)
+- **T16** — [test_anonymous_guest_sees_public_slot_but_must_log_in_to_book](tests/test_person_page.py#L14)
   - `tests/test_person_page.py::test_anonymous_guest_sees_public_slot_but_must_log_in_to_book`
 
 <a id="t17"></a>
 
-- **T17** — [test_public_profile_hides_booked_slot_but_shows_free_slot](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_person_page.py:59)
+- **T17** — [test_public_profile_hides_booked_slot_but_shows_free_slot](tests/test_person_page.py#L59)
   - `tests/test_person_page.py::test_public_profile_hides_booked_slot_but_shows_free_slot`
 
 <a id="t18"></a>
 
-- **T18** — [test_timezone_persists_after_reload](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_profile_page.py:12)
+- **T18** — [test_timezone_persists_after_reload](tests/test_profile_page.py#L12)
   - `tests/test_profile_page.py::test_timezone_persists_after_reload`
 
 <a id="t19"></a>
 
-- **T19** — [test_text_field_persists_after_reload](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_profile_page.py:41)
+- **T19** — [test_text_field_persists_after_reload](tests/test_profile_page.py#L41)
   - `tests/test_profile_page.py::test_text_field_persists_after_reload`
 
 <a id="t20"></a>
 
-- **T20** — [test_profile_fields_persist_together](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_profile_page.py:62)
+- **T20** — [test_profile_fields_persist_together](tests/test_profile_page.py#L62)
   - `tests/test_profile_page.py::test_profile_fields_persist_together`
 
 <a id="t21"></a>
 
-- **T21** — [test_can_help_skill_persists_after_reload](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_profile_page.py:91)
+- **T21** — [test_can_help_skill_persists_after_reload](tests/test_profile_page.py#L91)
   - `tests/test_profile_page.py::test_can_help_skill_persists_after_reload`
 
 <a id="t22"></a>
 
-- **T22** — [test_can_help_and_want_to_learn_skill_persists_after_reload](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_profile_page.py:105)
+- **T22** — [test_can_help_and_want_to_learn_skill_persists_after_reload](tests/test_profile_page.py#L105)
   - `tests/test_profile_page.py::test_can_help_and_want_to_learn_skill_persists_after_reload`
 
 <a id="t23"></a>
 
-- **T23** — [test_removed_skill_stays_absent_after_reload](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_profile_page.py:140)
+- **T23** — [test_removed_skill_stays_absent_after_reload](tests/test_profile_page.py#L140)
   - `tests/test_profile_page.py::test_removed_skill_stays_absent_after_reload`
 
 <a id="t24"></a>
 
-- **T24** — [test_saved_profile_is_visible_to_another_user](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_profile_page.py:170)
+- **T24** — [test_saved_profile_is_visible_to_another_user](tests/test_profile_page.py#L170)
   - `tests/test_profile_page.py::test_saved_profile_is_visible_to_another_user`
 
 <a id="t25"></a>
 
-- **T25** — [test_empty_name_cannot_replace_saved_name](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_profile_page.py:196)
+- **T25** — [test_empty_name_cannot_replace_saved_name](tests/test_profile_page.py#L195)
   - `tests/test_profile_page.py::test_empty_name_cannot_replace_saved_name`
 
 <a id="t26"></a>
 
-- **T26** — [test_optional_profile_field_can_be_cleared_and_saved](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_profile_page.py:230)
+- **T26** — [test_optional_profile_field_can_be_cleared_and_saved](tests/test_profile_page.py#L229)
   - `tests/test_profile_page.py::test_optional_profile_field_can_be_cleared_and_saved`
 
 <a id="t27"></a>
 
-- **T27** — [test_same_skill_cannot_be_added_twice_in_one_type](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_profile_page.py:264)
+- **T27** — [test_same_skill_cannot_be_added_twice_in_one_type](tests/test_profile_page.py#L263)
   - `tests/test_profile_page.py::test_same_skill_cannot_be_added_twice_in_one_type`
 
 <a id="t28"></a>
 
-- **T28** — [test_registration_logs_user_in_and_creates_profile](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_register_page.py:13)
+- **T28** — [test_registration_logs_user_in_and_creates_profile](tests/test_register_page.py#L13)
   - `tests/test_register_page.py::test_registration_logs_user_in_and_creates_profile`
 
 <a id="t29"></a>
 
-- **T29** — [test_registration_requires_each_field](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_register_page.py:41)
+- **T29** — [test_registration_requires_each_field](tests/test_register_page.py#L41)
   - `tests/test_register_page.py::test_registration_requires_each_field`
 
 <a id="t30"></a>
 
-- **T30** — [test_registration_rejects_seven_character_password](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_register_page.py:64)
+- **T30** — [test_registration_rejects_seven_character_password](tests/test_register_page.py#L64)
   - `tests/test_register_page.py::test_registration_rejects_seven_character_password`
 
 <a id="t31"></a>
 
-- **T31** — [test_user_can_create_slot](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_slot_page.py:17)
+- **T31** — [test_user_can_create_slot](tests/test_slot_page.py#L17)
   - `tests/test_slot_page.py::test_user_can_create_slot`
 
 <a id="t32"></a>
 
-- **T32** — [test_removed_free_slot_stays_absent_after_reload](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_slot_page.py:43)
+- **T32** — [test_removed_free_slot_stays_absent_after_reload](tests/test_slot_page.py#L43)
   - `tests/test_slot_page.py::test_removed_free_slot_stays_absent_after_reload`
 
 <a id="t33"></a>
 
-- **T33** — [test_slot_display_uses_owner_timezone_independently_of_browser](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_slot_page.py:73)
+- **T33** — [test_slot_display_uses_owner_timezone_independently_of_browser](tests/test_slot_page.py#L73)
   - `tests/test_slot_page.py::test_slot_display_uses_owner_timezone_independently_of_browser`
 
 <a id="t34"></a>
 
-- **T34** — [test_slot_calendar_rejects_past_dates](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_slot_page.py:121)
+- **T34** — [test_slot_calendar_rejects_past_dates](tests/test_slot_page.py#L120)
   - `tests/test_slot_page.py::test_slot_calendar_rejects_past_dates`
 
 <a id="t35"></a>
 
-- **T35** — [test_booked_slot_has_no_delete_action_and_stays_booked](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_slot_page.py:146)
+- **T35** — [test_booked_slot_has_no_delete_action_and_stays_booked](tests/test_slot_page.py#L145)
   - `tests/test_slot_page.py::test_booked_slot_has_no_delete_action_and_stays_booked`
 
 <a id="t36"></a>
 
-- **T36** — [test_slot_cannot_be_created_for_past_time_today](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_slot_page.py:173)
+- **T36** — [test_slot_cannot_be_created_for_past_time_today](tests/test_slot_page.py#L172)
   - `tests/test_slot_page.py::test_slot_cannot_be_created_for_past_time_today`
 
 <a id="t37"></a>
 
-- **T37** — [test_catalog_keeps_user_with_both_free_and_booked_slots](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_catalog_page.py:115)
+- **T37** — [test_catalog_keeps_user_with_both_free_and_booked_slots](tests/test_catalog_page.py#L113)
   - `tests/test_catalog_page.py::test_catalog_keeps_user_with_both_free_and_booked_slots`
 
 <a id="t38"></a>
 
-- **T38** — [test_booking_selected_slot_keeps_other_slots_free](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_booking.py:159)
+- **T38** — [test_booking_selected_slot_keeps_other_slots_free](tests/test_booking.py#L153)
   - `tests/test_booking.py::test_booking_selected_slot_keeps_other_slots_free`
 
 <a id="t39"></a>
 
-- **T39** — [test_removing_one_slot_keeps_other_free_slots](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_slot_page.py:199)
+- **T39** — [test_removing_one_slot_keeps_other_free_slots](tests/test_slot_page.py#L199)
   - `tests/test_slot_page.py::test_removing_one_slot_keeps_other_free_slots`
 
 <a id="t40"></a>
 
-- **T40** — [test_updated_profile_is_visible_to_another_user](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_profile_page.py:291)
+- **T40** — [test_updated_profile_is_visible_to_another_user](tests/test_profile_page.py#L290)
   - `tests/test_profile_page.py::test_updated_profile_is_visible_to_another_user`
 
 <a id="t41"></a>
 
-- **T41** — [test_skill_updates_are_visible_in_public_profile_and_search](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_catalog_page.py:139)
+- **T41** — [test_skill_updates_are_visible_in_public_profile_and_search](tests/test_catalog_page.py#L136)
   - `tests/test_catalog_page.py::test_skill_updates_are_visible_in_public_profile_and_search`
 
 <a id="t42"></a>
 
-- **T42** — [test_catalog_search_without_matches_shows_empty_results](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_catalog_page.py:216)
+- **T42** — [test_catalog_search_without_matches_shows_empty_results](tests/test_catalog_page.py#L212)
   - `tests/test_catalog_page.py::test_catalog_search_without_matches_shows_empty_results`
 
 <a id="t43"></a>
 
-- **T43** — [test_clearing_skill_search_restores_unfiltered_catalog](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_catalog_page.py:234)
+- **T43** — [test_clearing_skill_search_restores_unfiltered_catalog](tests/test_catalog_page.py#L230)
   - `tests/test_catalog_page.py::test_clearing_skill_search_restores_unfiltered_catalog`
 
 <a id="t44"></a>
 
-- **T44** — [test_registration_rejects_existing_email](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_register_page.py:87)
+- **T44** — [test_registration_rejects_existing_email](tests/test_register_page.py#L87)
   - `tests/test_register_page.py::test_registration_rejects_existing_email`
 
 <a id="t45"></a>
 
-- **T45** — [test_registration_rejects_invalid_email_format](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_register_page.py:114)
+- **T45** — [test_registration_rejects_invalid_email_format](tests/test_register_page.py#L114)
   - `tests/test_register_page.py::test_registration_rejects_invalid_email_format`
 
 <a id="t46"></a>
 
-- **T46** — [test_anonymous_guest_cannot_open_protected_page](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_auth_session.py:9)
+- **T46** — [test_anonymous_guest_cannot_open_protected_page](tests/test_auth_session.py#L9)
   - `tests/test_auth_session.py::test_anonymous_guest_cannot_open_protected_page`
 
 <a id="t47"></a>
 
-- **T47** — [test_protected_page_requires_login_after_logout](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_auth_session.py:23)
+- **T47** — [test_protected_page_requires_login_after_logout](tests/test_auth_session.py#L24)
   - `tests/test_auth_session.py::test_protected_page_requires_login_after_logout`
 
 <a id="t48"></a>
 
-- **T48** — [test_dismissing_booking_confirmation_keeps_slot_free](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_booking.py:219)
+- **T48** — [test_dismissing_booking_confirmation_keeps_slot_free](tests/test_booking.py#L212)
   - `tests/test_booking.py::test_dismissing_booking_confirmation_keeps_slot_free`
 
 <a id="t49"></a>
 
-- **T49** — [test_empty_skill_is_not_added](C:/Users/Evgeniy/Desktop/POMO/my-tests/tests/test_profile_page.py:346)
+- **T49** — [test_empty_skill_is_not_added](tests/test_profile_page.py#L344)
   - `tests/test_profile_page.py::test_empty_skill_is_not_added`
 
 ## Приоритет следующих проверок
