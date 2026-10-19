@@ -1,0 +1,28 @@
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+output-format = "concise"
+src = ["."]
+extend-exclude = ["allure-results", "allure-report", "test-results"]
+force-exclude = true
+
+[tool.ruff.lint]
+# Basic errors, unused names, import ordering, common bugs and pytest style.
+# ARG rules are intentionally not enabled: fixture arguments may run setup only.
+# Line wrapping belongs to the formatter; E501 is not enabled.
+select = ["E4", "E7", "E9", "F", "I", "B", "PT"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["api", "components", "config", "helpers", "pages"]
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false
+mark-parentheses = false
+parametrize-names-type = "csv"
+parametrize-values-type = "list"
+parametrize-values-row-type = "tuple"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"

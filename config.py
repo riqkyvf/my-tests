@@ -1,0 +1,7 @@
+BASE_URL = "https://aiqa.su"
+ACCOUNTS_URL = f"{BASE_URL}/api/pomidorqa/test/accounts"
+
+REQUEST_TIMEOUT_SECONDS = 10
+REQUEST_TIMEOUT_MS = REQUEST_TIMEOUT_SECONDS * 1000
+
+DEFAULT_PROFILE_TIMEZONE = "Europe/Moscow"
