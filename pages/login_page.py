@@ -1,6 +1,6 @@
 from playwright.sync_api import Page
 
-from config import BASE_URL
+from config import BASE_URL, REQUEST_TIMEOUT_MS
 
 
 class LoginPage:
@@ -17,4 +17,11 @@ class LoginPage:
     def login(self, email, password):
         self.email_input.fill(email)
         self.password_input.fill(password)
-        self.submit_button.click()
+        with self.page.expect_response(
+            lambda response: (
+                response.url == f"{BASE_URL}/pomidorqa/auth/login"
+                and response.request.method == "POST"
+            ),
+            timeout=REQUEST_TIMEOUT_MS,
+        ):
+            self.submit_button.click()
