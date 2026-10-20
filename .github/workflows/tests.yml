@@ -82,8 +82,20 @@ jobs:
           python -m pytest "${test_targets[@]}" \
             --browser chromium \
             --reruns 1 \
+            --tracing=retain-on-failure \
+            --screenshot=only-on-failure \
+            --output=test-results \
             --alluredir=allure-results \
             --clean-alluredir
+
+      - name: Upload Playwright diagnostics
+        if: ${{ !cancelled() && hashFiles('test-results/**/trace*.zip', 'test-results/**/test-failed-*.png') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-diagnostics
+          path: test-results/
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Generate Allure report
         if: ${{ !cancelled() && hashFiles('allure-results/*-result.json') != '' }}
