@@ -2,6 +2,7 @@ import uuid
 from datetime import date, timedelta
 
 import allure
+import pytest
 from playwright.sync_api import expect
 
 from components.header import Header
@@ -13,6 +14,7 @@ from pages.profile_page import ProfilePage
 from pages.slots_page import SlotsPage
 
 
+@pytest.mark.smoke
 @allure.feature("Бронирование")
 @allure.title("Участник бронирует слот, и встреча видна обеим сторонам")
 def test_guest_books_host_slot_and_both_see_meeting(user_factory):

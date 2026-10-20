@@ -8,6 +8,32 @@ from pages.profile_page import ProfilePage
 
 
 @allure.feature("Профиль")
+@allure.title("В профиле доступны все десять часовых поясов из требований")
+def test_profile_has_all_required_timezones(profile_page, logged_in_page):
+    with allure.step("Открыть список часовых поясов профиля"):
+        profile_page.open()
+        expect(profile_page.timezone_list).to_be_visible()
+
+    with allure.step("Проверить полный список без пропущенных и лишних значений"):
+        expected_timezones = [
+            "Europe/Kaliningrad",
+            "Europe/Moscow",
+            "Europe/Samara",
+            "Asia/Yekaterinburg",
+            "Asia/Omsk",
+            "Asia/Novosibirsk",
+            "Asia/Krasnoyarsk",
+            "Asia/Irkutsk",
+            "Asia/Yakutsk",
+            "Asia/Vladivostok",
+        ]
+        expect(profile_page.timezone_options).to_have_count(len(expected_timezones))
+        for timezone in expected_timezones:
+            expect(profile_page.timezone_option(timezone)).to_have_count(1)
+            expect(profile_page.timezone_option(timezone)).to_be_enabled()
+
+
+@allure.feature("Профиль")
 @allure.title("Изменённый часовой пояс сохраняется после перезагрузки")
 def test_timezone_persists_after_reload(page: Page, profile_page, logged_in_page):
     with allure.step("Проверить исходный часовой пояс профиля"):

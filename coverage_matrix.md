@@ -1,9 +1,9 @@
 # Матрица покрытия PomidorQA
 
-Дата сверки: **19.10.2026**. Источник: [requirements.md](requirements.md).
+Дата сверки: **20.10.2026**. Источник: [requirements.md](requirements.md).
 
-В Python-проекте собрано **74 тестовых случаев** для Chromium с учётом параметризации
-(`pytest --collect-only`, без выполнения сценариев). В них **49 тестовых функций**.
+В Python-проекте собрано **76 тестовых случаев** для Chromium с учётом параметризации
+(`pytest --collect-only`, без выполнения сценариев). В них **51 тестовая функция**.
 Матрица составлена по проверкам в текущем коде, а не по названиям тестов.
 
 Статусы описывают наличие и границы автоматизации, а не результат последнего прогона.
@@ -137,7 +137,7 @@ ID R/O/A введены только для этой матрицы; в исхо
 | R12.1 | Ведущий и гость видят свою подтверждённую будущую встречу в ближайших | Автоматизировано | [T02](#t02), [T06](#t06) | Сверяются участник, дата/время в основном flow и общий booking-id. |
 | R12.2 | Отменённая встреча находится в прошедших и отменённых, а не ближайших | Автоматизировано | [T04](#t04), [T05](#t05) | Проверяются оба участника после нового открытия страницы. |
 | R12.3 | Начавшаяся подтверждённая встреча переходит в прошедшие | Заблокировано | — | По требованиям граница — начало, не окончание 25 минут. Нужны соответствующие записи или серверные часы. |
-| R12.4 | Список показывает только встречи текущего участника | Частично автоматизировано | [T06](#t06) | Проигравший не видит чужую ближайшую встречу. Смешанный список своих/чужих и чужие отменённые записи отдельно не проверяются. |
+| R12.4 | Список показывает только встречи текущего участника | Автоматизировано | [T06](#t06), [T51](#t51) | Две независимые пары имеют ближайшую и отменённую встречу. У всех четырёх участников проверяются свои ID в нужных разделах, количество записей и отсутствие чужих ID в обоих разделах. |
 | R12.5 | Отмена доступна только из ближайших, для отменённой записи действия нет | Автоматизировано | [T04](#t04) | После отмены каждым из участников у обоих проверяются карточка в прошедших и отсутствие кнопки отмены для её booking-id. Начавшиеся встречи отдельно остаются заблокированы в R12.3. |
 
 ### Тестовые данные и окружение — §14
@@ -145,7 +145,7 @@ ID R/O/A введены только для этой матрицы; в исхо
 | ID | Требование / проверка | Статус | Тесты | Границы покрытия / что осталось |
 | --- | --- | --- | --- | --- |
 | R14.1 | Для регистрации не нужны подтверждение email и приглашение | Автоматизировано | [T28](#t28) | Новый уникальный email регистрируется, сразу появляется сессия и доступен профиль. |
-| R14.2 | Список доступных часовых поясов совпадает со всеми 10 значениями требований | Частично автоматизировано | [T18](#t18), [T33](#t33) | Проверены default и сохранение Moscow/Irkutsk; Kaliningrad/Vladivostok задаются браузеру и не доказывают содержимое select. |
+| R14.2 | Список доступных часовых поясов совпадает со всеми 10 значениями требований | Автоматизировано | [T50](#t50) | В select ровно десять вариантов; каждое значение из §14 встречается ровно один раз и доступно для выбора. Порядок вариантов не фиксируется. |
 
 ### За границами MVP — §2
 
@@ -200,12 +200,12 @@ UI-поиск со второго аккаунта → бронь → встре
 
 <a id="t02"></a>
 
-- **T02** — [test_guest_books_host_slot_and_both_see_meeting](tests/test_booking.py#L18)
+- **T02** — [test_guest_books_host_slot_and_both_see_meeting](tests/test_booking.py#L20)
   - `tests/test_booking.py::test_guest_books_host_slot_and_both_see_meeting`
 
 <a id="t03"></a>
 
-- **T03** — [test_owner_cannot_book_own_slot](tests/test_booking.py#L115)
+- **T03** — [test_owner_cannot_book_own_slot](tests/test_booking.py#L117)
   - `tests/test_booking.py::test_owner_cannot_book_own_slot`
 
 <a id="t04"></a>
@@ -250,22 +250,22 @@ UI-поиск со второго аккаунта → бронь → встре
 
 <a id="t12"></a>
 
-- **T12** — [test_login_with_invalid_credentials](tests/test_login_page.py#L11)
+- **T12** — [test_login_with_invalid_credentials](tests/test_login_page.py#L12)
   - `tests/test_login_page.py::test_login_with_invalid_credentials`
 
 <a id="t13"></a>
 
-- **T13** — [test_login_with_valid_credentials](tests/test_login_page.py#L27)
+- **T13** — [test_login_with_valid_credentials](tests/test_login_page.py#L29)
   - `tests/test_login_page.py::test_login_with_valid_credentials`
 
 <a id="t14"></a>
 
-- **T14** — [test_login_with_invalid_password](tests/test_login_page.py#L49)
+- **T14** — [test_login_with_invalid_password](tests/test_login_page.py#L51)
   - `tests/test_login_page.py::test_login_with_invalid_password`
 
 <a id="t15"></a>
 
-- **T15** — [test_logout](tests/test_login_page.py#L69)
+- **T15** — [test_logout](tests/test_login_page.py#L71)
   - `tests/test_login_page.py::test_logout`
 
 <a id="t16"></a>
@@ -280,67 +280,67 @@ UI-поиск со второго аккаунта → бронь → встре
 
 <a id="t18"></a>
 
-- **T18** — [test_timezone_persists_after_reload](tests/test_profile_page.py#L12)
+- **T18** — [test_timezone_persists_after_reload](tests/test_profile_page.py#L38)
   - `tests/test_profile_page.py::test_timezone_persists_after_reload`
 
 <a id="t19"></a>
 
-- **T19** — [test_text_field_persists_after_reload](tests/test_profile_page.py#L41)
+- **T19** — [test_text_field_persists_after_reload](tests/test_profile_page.py#L67)
   - `tests/test_profile_page.py::test_text_field_persists_after_reload`
 
 <a id="t20"></a>
 
-- **T20** — [test_profile_fields_persist_together](tests/test_profile_page.py#L62)
+- **T20** — [test_profile_fields_persist_together](tests/test_profile_page.py#L88)
   - `tests/test_profile_page.py::test_profile_fields_persist_together`
 
 <a id="t21"></a>
 
-- **T21** — [test_can_help_skill_persists_after_reload](tests/test_profile_page.py#L91)
+- **T21** — [test_can_help_skill_persists_after_reload](tests/test_profile_page.py#L117)
   - `tests/test_profile_page.py::test_can_help_skill_persists_after_reload`
 
 <a id="t22"></a>
 
-- **T22** — [test_can_help_and_want_to_learn_skill_persists_after_reload](tests/test_profile_page.py#L105)
+- **T22** — [test_can_help_and_want_to_learn_skill_persists_after_reload](tests/test_profile_page.py#L131)
   - `tests/test_profile_page.py::test_can_help_and_want_to_learn_skill_persists_after_reload`
 
 <a id="t23"></a>
 
-- **T23** — [test_removed_skill_stays_absent_after_reload](tests/test_profile_page.py#L140)
+- **T23** — [test_removed_skill_stays_absent_after_reload](tests/test_profile_page.py#L166)
   - `tests/test_profile_page.py::test_removed_skill_stays_absent_after_reload`
 
 <a id="t24"></a>
 
-- **T24** — [test_saved_profile_is_visible_to_another_user](tests/test_profile_page.py#L170)
+- **T24** — [test_saved_profile_is_visible_to_another_user](tests/test_profile_page.py#L196)
   - `tests/test_profile_page.py::test_saved_profile_is_visible_to_another_user`
 
 <a id="t25"></a>
 
-- **T25** — [test_empty_name_cannot_replace_saved_name](tests/test_profile_page.py#L195)
+- **T25** — [test_empty_name_cannot_replace_saved_name](tests/test_profile_page.py#L221)
   - `tests/test_profile_page.py::test_empty_name_cannot_replace_saved_name`
 
 <a id="t26"></a>
 
-- **T26** — [test_optional_profile_field_can_be_cleared_and_saved](tests/test_profile_page.py#L229)
+- **T26** — [test_optional_profile_field_can_be_cleared_and_saved](tests/test_profile_page.py#L255)
   - `tests/test_profile_page.py::test_optional_profile_field_can_be_cleared_and_saved`
 
 <a id="t27"></a>
 
-- **T27** — [test_same_skill_cannot_be_added_twice_in_one_type](tests/test_profile_page.py#L263)
+- **T27** — [test_same_skill_cannot_be_added_twice_in_one_type](tests/test_profile_page.py#L289)
   - `tests/test_profile_page.py::test_same_skill_cannot_be_added_twice_in_one_type`
 
 <a id="t28"></a>
 
-- **T28** — [test_registration_logs_user_in_and_creates_profile](tests/test_register_page.py#L11)
+- **T28** — [test_registration_logs_user_in_and_creates_profile](tests/test_register_page.py#L17)
   - `tests/test_register_page.py::test_registration_logs_user_in_and_creates_profile`
 
 <a id="t29"></a>
 
-- **T29** — [test_registration_requires_each_field](tests/test_register_page.py#L40)
+- **T29** — [test_registration_requires_each_field](tests/test_register_page.py#L46)
   - `tests/test_register_page.py::test_registration_requires_each_field`
 
 <a id="t30"></a>
 
-- **T30** — [test_registration_rejects_seven_character_password](tests/test_register_page.py#L63)
+- **T30** — [test_registration_rejects_seven_character_password](tests/test_register_page.py#L69)
   - `tests/test_register_page.py::test_registration_rejects_seven_character_password`
 
 <a id="t31"></a>
@@ -380,7 +380,7 @@ UI-поиск со второго аккаунта → бронь → встре
 
 <a id="t38"></a>
 
-- **T38** — [test_booking_selected_slot_keeps_other_slots_free](tests/test_booking.py#L153)
+- **T38** — [test_booking_selected_slot_keeps_other_slots_free](tests/test_booking.py#L155)
   - `tests/test_booking.py::test_booking_selected_slot_keeps_other_slots_free`
 
 <a id="t39"></a>
@@ -390,7 +390,7 @@ UI-поиск со второго аккаунта → бронь → встре
 
 <a id="t40"></a>
 
-- **T40** — [test_updated_profile_is_visible_to_another_user](tests/test_profile_page.py#L290)
+- **T40** — [test_updated_profile_is_visible_to_another_user](tests/test_profile_page.py#L316)
   - `tests/test_profile_page.py::test_updated_profile_is_visible_to_another_user`
 
 <a id="t41"></a>
@@ -410,12 +410,12 @@ UI-поиск со второго аккаунта → бронь → встре
 
 <a id="t44"></a>
 
-- **T44** — [test_registration_rejects_existing_email](tests/test_register_page.py#L86)
+- **T44** — [test_registration_rejects_existing_email](tests/test_register_page.py#L92)
   - `tests/test_register_page.py::test_registration_rejects_existing_email`
 
 <a id="t45"></a>
 
-- **T45** — [test_registration_rejects_invalid_email_format](tests/test_register_page.py#L113)
+- **T45** — [test_registration_rejects_invalid_email_format](tests/test_register_page.py#L119)
   - `tests/test_register_page.py::test_registration_rejects_invalid_email_format`
 
 <a id="t46"></a>
@@ -430,18 +430,25 @@ UI-поиск со второго аккаунта → бронь → встре
 
 <a id="t48"></a>
 
-- **T48** — [test_dismissing_booking_confirmation_keeps_slot_free](tests/test_booking.py#L212)
+- **T48** — [test_dismissing_booking_confirmation_keeps_slot_free](tests/test_booking.py#L214)
   - `tests/test_booking.py::test_dismissing_booking_confirmation_keeps_slot_free`
 
 <a id="t49"></a>
 
-- **T49** — [test_empty_skill_is_not_added](tests/test_profile_page.py#L344)
+- **T49** — [test_empty_skill_is_not_added](tests/test_profile_page.py#L370)
   - `tests/test_profile_page.py::test_empty_skill_is_not_added`
 
-## Приоритет следующих проверок
+<a id="t50"></a>
 
-1. R14.2 — полный список десяти часовых поясов.
-2. R12.4 — смешанные списки своих/чужих ближайших и отменённых встреч.
+- **T50** — [test_profile_has_all_required_timezones](tests/test_profile_page.py#L12)
+  - `tests/test_profile_page.py::test_profile_has_all_required_timezones`
+
+<a id="t51"></a>
+
+- **T51** — [test_meetings_lists_show_only_current_participants_bookings](tests/test_meetings_page.py#L9)
+  - `tests/test_meetings_page.py::test_meetings_lists_show_only_current_participants_bookings`
+
+## Оставшиеся ограничения автоматизации
 
 R7.8 заблокирован до появления API удаления слотов для проверки серверных прав.
 

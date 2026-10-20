@@ -21,6 +21,13 @@ class ProfilePage:
     def open(self):
         self.page.goto(f"{BASE_URL}/pomidorqa/profile")
 
+    def timezone_option(self, value: str):
+        return self.timezone_list.locator(f'option[value="{value}"]')
+
+    @property
+    def timezone_options(self):
+        return self.timezone_list.get_by_role("option")
+
     def fill_text_data(self, name, telegram, about_info):
         self.name_input.fill(name)
         self.telegram_input.fill(telegram)

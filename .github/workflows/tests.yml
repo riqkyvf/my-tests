@@ -1,6 +1,8 @@
 name: PomidorQA tests
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -66,10 +68,7 @@ jobs:
         run: |
           case "$TEST_SUITE" in
             smoke)
-              test_targets=(
-                tests/test_login_page.py::test_login_with_valid_credentials
-                tests/test_booking.py::test_guest_books_host_slot_and_both_see_meeting
-              )
+              test_targets=(-m smoke)
               ;;
             full)
               test_targets=()

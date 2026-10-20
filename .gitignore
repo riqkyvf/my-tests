@@ -1,5 +1,9 @@
 /allure-results/
+/allure-results-*/
 /allure-report/
+/allure-report-*/
+/test-results/
+/diagnostics/
 /.ruff_cache/
 __pycache__/
 *.pyc

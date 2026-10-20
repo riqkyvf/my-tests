@@ -319,6 +319,41 @@ def booked_meeting(booked_meeting_factory):
 
 
 @pytest.fixture
+def mixed_meetings(booked_meeting_factory):
+    groups = []
+    for _ in range(2):
+        prepared = booked_meeting_factory()
+        host = prepared["host"]
+        guest = prepared["guest"]
+        meetings = MeetingsPage(guest["page"])
+        meetings.open()
+        meetings.cancel_meeting(prepared["booking_id"])
+        expect(meetings.past_by_id(prepared["booking_id"])).to_contain_text("отменено")
+
+        # Повторная бронь создаёт новую ближайшую встречу у той же пары участников.
+        person = PersonPage(guest["page"])
+        person.open(prepared["person_id"])
+        person.select_slot(prepared["slot_date"], prepared["slot_time"])
+        expect(person.booking_slot_id).to_have_value(prepared["slot_id"])
+        assert "Забронировано!" in person.confirm_booking_and_close()
+        meetings.open()
+        meeting = meetings.meeting_with(host["user"]["name"])
+        expect(meeting).to_have_count(1)
+        upcoming_id = meeting.get_attribute("data-booking-id")
+        assert upcoming_id, "У повторной встречи отсутствует ID"
+        assert upcoming_id != prepared["booking_id"], "Повторная бронь должна иметь новый ID"
+        groups.append(
+            {
+                "host": host,
+                "guest": guest,
+                "upcoming_id": upcoming_id,
+                "cancelled_id": prepared["booking_id"],
+            }
+        )
+    return groups
+
+
+@pytest.fixture
 def meeting_for_cancellation_deadline(request, booked_meeting_factory):
     starts_at = now_in_moscow() + timedelta(minutes=request.param)
     return booked_meeting_factory(starts_at=starts_at)

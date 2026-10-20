@@ -1,6 +1,7 @@
 import uuid
 
 import allure
+import pytest
 from playwright.sync_api import Page, expect
 
 from config import BASE_URL
@@ -24,6 +25,7 @@ def test_login_with_invalid_credentials(page: Page, login_page):
 
 @allure.feature("Авторизация")
 @allure.title("Участник входит с правильными email и паролем")
+@pytest.mark.smoke
 def test_login_with_valid_credentials(
     page: Page, created_account, login_page, header, profile_page
 ):
