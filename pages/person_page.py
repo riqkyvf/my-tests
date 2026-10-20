@@ -73,7 +73,11 @@ class PersonPage:
 
     def confirm_booking_and_close(self) -> str:
         self.confirm_booking()
-        self.booking_success.wait_for(state="visible", timeout=REQUEST_TIMEOUT_MS)
+        result = self.booking_success.or_(self.booking_error).filter(visible=True)
+        result.wait_for(state="visible", timeout=REQUEST_TIMEOUT_MS)
+        if self.booking_error.is_visible():
+            error_message = self.booking_error.inner_text().strip()
+            raise RuntimeError(f"Бронирование не выполнено: {error_message or 'ошибка без текста'}")
         success_message = self.booking_success.inner_text()
         self.close_booking_dialog()
         self.booking_dialog.wait_for(state="hidden", timeout=REQUEST_TIMEOUT_MS)
