@@ -330,17 +330,17 @@ UI-поиск со второго аккаунта → бронь → встре
 
 <a id="t28"></a>
 
-- **T28** — [test_registration_logs_user_in_and_creates_profile](tests/test_register_page.py#L13)
+- **T28** — [test_registration_logs_user_in_and_creates_profile](tests/test_register_page.py#L11)
   - `tests/test_register_page.py::test_registration_logs_user_in_and_creates_profile`
 
 <a id="t29"></a>
 
-- **T29** — [test_registration_requires_each_field](tests/test_register_page.py#L41)
+- **T29** — [test_registration_requires_each_field](tests/test_register_page.py#L40)
   - `tests/test_register_page.py::test_registration_requires_each_field`
 
 <a id="t30"></a>
 
-- **T30** — [test_registration_rejects_seven_character_password](tests/test_register_page.py#L64)
+- **T30** — [test_registration_rejects_seven_character_password](tests/test_register_page.py#L63)
   - `tests/test_register_page.py::test_registration_rejects_seven_character_password`
 
 <a id="t31"></a>
@@ -410,12 +410,12 @@ UI-поиск со второго аккаунта → бронь → встре
 
 <a id="t44"></a>
 
-- **T44** — [test_registration_rejects_existing_email](tests/test_register_page.py#L87)
+- **T44** — [test_registration_rejects_existing_email](tests/test_register_page.py#L86)
   - `tests/test_register_page.py::test_registration_rejects_existing_email`
 
 <a id="t45"></a>
 
-- **T45** — [test_registration_rejects_invalid_email_format](tests/test_register_page.py#L114)
+- **T45** — [test_registration_rejects_invalid_email_format](tests/test_register_page.py#L113)
   - `tests/test_register_page.py::test_registration_rejects_invalid_email_format`
 
 <a id="t46"></a>

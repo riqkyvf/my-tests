@@ -1,4 +1,4 @@
-from playwright.sync_api import APIRequestContext, APIResponse
+from playwright.sync_api import APIRequestContext, APIResponse, Error
 
 from config import ACCOUNTS_URL, REQUEST_TIMEOUT_MS
 
@@ -15,7 +15,12 @@ def create_account(
 
 
 def delete_account(api_context: APIRequestContext) -> APIResponse:
-    return api_context.delete(
-        ACCOUNTS_URL,
-        timeout=REQUEST_TIMEOUT_MS,
-    )
+    try:
+        return api_context.delete(
+            ACCOUNTS_URL,
+            timeout=REQUEST_TIMEOUT_MS,
+        )
+    except Error as error:
+        # Журнал HTTP-запроса может содержать Cookie и Authorization.
+        message = error.message.partition("Call log:")[0].strip()
+        raise type(error)(message) from None

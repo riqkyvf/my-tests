@@ -5,19 +5,18 @@ from playwright.sync_api import expect
 from config import BASE_URL, REQUEST_TIMEOUT_MS
 
 
-@pytest.mark.parametrize(
-    "password", ["12345678", "123456789"], ids=["exactly_8_chars", "exactly_9_chars"]
-)
+@pytest.mark.parametrize("password_length", [8, 9], ids=["exactly_8_chars", "exactly_9_chars"])
 @allure.feature("Регистрация")
 @allure.title("Регистрация авторизует участника и создаёт профиль ({param_id})")
 def test_registration_logs_user_in_and_creates_profile(
-    page, register_page, registration_user, header, profile_page, password
+    page, register_page, registration_user, header, profile_page, password_length
 ):
     with allure.step("Открыть форму регистрации"):
         user = registration_user
         register_page.open()
 
     with allure.step("Зарегистрировать нового участника"):
+        password = "1" * password_length
         register_page.register(user["name"], user["email"], password)
 
     with allure.step("Проверить автоматический вход"):
