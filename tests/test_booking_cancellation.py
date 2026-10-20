@@ -110,7 +110,17 @@ def test_cancellation_respects_two_hour_deadline(
             )
 
     with allure.step("Попытаться отменить встречу"):
-        meetings.cancel_meeting(booking_id)
+        response = meetings.cancel_meeting(booking_id)
+
+    with allure.step("Проверить успешную отмену или причину отказа до обновления страницы"):
+        assert response.status < 500, f"Ошибка сервера при отмене встречи: HTTP {response.status}"
+        if can_cancel:
+            expect(meetings.past_by_id(booking_id)).to_contain_text("отменено")
+        else:
+            expect(meetings.cancel_error).to_have_text(
+                "Отменить встречу можно не позже чем за 2 часа до начала. "
+                "Напиши собеседнику в Telegram."
+            )
 
     with allure.step("Проверить результат отмены у обеих сторон"):
         for participant in (prepared["host"], prepared["guest"]):

@@ -40,21 +40,26 @@ def api_context(playwright):
 @pytest.fixture
 def created_account(api_context):
     user = make_user_data()
-
-    response = create_account(api_context, user)
-
-    assert response.status == 201, f"Создание аккаунта: HTTP {response.status}. {response.text()}"
+    created = False
 
     try:
+        response = create_account(api_context, user)
+        created = response.status == 201
+        assert created, f"Создание аккаунта: HTTP {response.status}. {response.text()}"
+
         yield {
             "api_context": api_context,
             "user": user,
         }
     finally:
-        response = delete_account(api_context)
-        assert response.status == 200, (
-            f"Удаление аккаунта: HTTP {response.status}. {response.text()}"
-        )
+        if created or any(
+            cookie["name"] == "pomidorqa_session"
+            for cookie in api_context.storage_state()["cookies"]
+        ):
+            response = delete_account(api_context)
+            assert response.status == 200, (
+                f"Удаление аккаунта: HTTP {response.status}. {response.text()}"
+            )
 
 
 @pytest.fixture
@@ -79,19 +84,22 @@ def register_page(page):
 
 @pytest.fixture
 def user_factory(new_context):
-    created_contexts = []
+    account_attempts = []
 
     def create_user(role, **context_options):
         user = make_user_data(role)
         context = new_context(**context_options)
+        # Учитываем попытку до запроса: сессия может появиться и при неожиданном ответе.
+        account = {"context": context, "created": False}
+        account_attempts.append(account)
 
         response = create_account(context.request, user)
+        account["created"] = response.status == 201
 
-        assert response.status == 201, (
+        assert account["created"], (
             f"Создание пользователя {user['email']}: HTTP {response.status}. {response.text()}"
         )
 
-        created_contexts.append(context)
         page = context.new_page()
 
         return {
@@ -105,8 +113,13 @@ def user_factory(new_context):
     finally:
         errors = []
 
-        for context in created_contexts:
+        for account in account_attempts:
+            context = account["context"]
             try:
+                if not account["created"] and not any(
+                    cookie["name"] == "pomidorqa_session" for cookie in context.cookies()
+                ):
+                    continue
                 response = delete_account(context.request)
 
                 assert response.status == 200, (
@@ -241,7 +254,7 @@ def published_profile(available_person_factory):
 
 @pytest.fixture
 def booked_slot_factory(available_person_factory, user_factory):
-    def create_booked_slot(*, starts_at=None):
+    def create_booked_slot(*, starts_at=None, guest=None):
         skill_name = f"cancel-{uuid.uuid4().hex}"
         slot_options = {}
         if starts_at is not None:
@@ -255,7 +268,8 @@ def booked_slot_factory(available_person_factory, user_factory):
             "cancel-host", [("can_help", skill_name)], **slot_options
         )
         host = prepared["person"]
-        guest = user_factory("cancel-guest")
+        if guest is None:
+            guest = user_factory("cancel-guest")
 
         catalog = CatalogPage(guest["page"])
         catalog.open()
@@ -291,8 +305,8 @@ def booked_slot(booked_slot_factory):
 
 @pytest.fixture
 def booked_meeting_factory(booked_slot_factory):
-    def create_meeting(*, starts_at=None):
-        prepared = booked_slot_factory(starts_at=starts_at)
+    def create_meeting(*, starts_at=None, guest=None):
+        prepared = booked_slot_factory(starts_at=starts_at, guest=guest)
         host = prepared["host"]
         guest = prepared["guest"]
 
@@ -316,6 +330,16 @@ def booked_meeting_factory(booked_slot_factory):
 @pytest.fixture
 def booked_meeting(booked_meeting_factory):
     return booked_meeting_factory()
+
+
+@pytest.fixture
+def meetings_in_both_roles(booked_meeting_factory):
+    as_host = booked_meeting_factory()
+    participant = as_host["host"]
+    as_guest = booked_meeting_factory(
+        guest=participant, starts_at=now_in_moscow() + timedelta(days=3)
+    )
+    return {"participant": participant, "as_host": as_host, "as_guest": as_guest}
 
 
 @pytest.fixture

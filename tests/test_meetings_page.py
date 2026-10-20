@@ -1,6 +1,9 @@
+from datetime import date
+
 import allure
 from playwright.sync_api import expect
 
+from helpers.dates import format_slot_date
 from pages.meetings_page import MeetingsPage
 
 
@@ -31,3 +34,45 @@ def test_meetings_lists_show_only_current_participants_bookings(mixed_meetings):
                 for booking_id in (other_group["upcoming_id"], other_group["cancelled_id"]):
                     expect(meetings.upcoming_by_id(booking_id)).to_have_count(0)
                     expect(meetings.past_by_id(booking_id)).to_have_count(0)
+
+
+@allure.feature("Мои встречи")
+@allure.title("Один участник видит встречи, в которых он ведущий и гость")
+def test_participant_sees_meetings_in_both_roles(meetings_in_both_roles):
+    with allure.step("Открыть встречи участника, выступающего в обеих ролях"):
+        prepared = meetings_in_both_roles
+        participant = prepared["participant"]
+        meetings = MeetingsPage(participant["page"])
+        meetings.open()
+
+    with allure.step("Проверить обе ближайшие встречи, собеседников, даты и время"):
+        expect(meetings.cards).to_have_count(2)
+        expect(meetings.past_cards).to_have_count(0)
+        for role, partner_role in (("as_host", "guest"), ("as_guest", "host")):
+            booking = prepared[role]
+            card = meetings.upcoming_by_id(booking["booking_id"])
+            expect(card).to_contain_text(booking[partner_role]["user"]["name"])
+            expect(card).to_contain_text(format_slot_date(date.fromisoformat(booking["slot_date"])))
+            expect(card).to_contain_text(booking["slot_time"])
+
+    with allure.step("Проверить сохранение обеих встреч после перезагрузки"):
+        participant["page"].reload()
+        expect(meetings.cards).to_have_count(2)
+        for role in ("as_host", "as_guest"):
+            expect(meetings.upcoming_by_id(prepared[role]["booking_id"])).to_be_visible()
+
+    with allure.step("Проверить общий ID у собеседников и отсутствие чужой встречи"):
+        for role, partner_role, other_role in (
+            ("as_host", "guest", "as_guest"),
+            ("as_guest", "host", "as_host"),
+        ):
+            booking = prepared[role]
+            partner_meetings = MeetingsPage(booking[partner_role]["page"])
+            partner_meetings.open()
+            expect(partner_meetings.cards).to_have_count(1)
+            expect(partner_meetings.upcoming_by_id(booking["booking_id"])).to_contain_text(
+                participant["user"]["name"]
+            )
+            expect(
+                partner_meetings.upcoming_by_id(prepared[other_role]["booking_id"])
+            ).to_have_count(0)

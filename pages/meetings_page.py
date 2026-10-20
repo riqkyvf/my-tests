@@ -1,4 +1,4 @@
-from playwright.sync_api import Page
+from playwright.sync_api import Page, Response
 
 from config import BASE_URL, REQUEST_TIMEOUT_MS
 
@@ -13,6 +13,7 @@ class MeetingsPage:
         )
 
         self.past_cards = self.past.locator("[data-booking-id]")
+        self.cancel_error = page.get_by_test_id("cancel-error")
 
     def open(self):
         self.page.goto(f"{BASE_URL}/pomidorqa/bookings")
@@ -29,14 +30,15 @@ class MeetingsPage:
     def past_cancel_button(self, booking_id: str):
         return self.past_by_id(booking_id).get_by_role("button", name="Отменить", exact=True)
 
-    def cancel_meeting(self, booking_id: str):
+    def cancel_meeting(self, booking_id: str) -> Response:
         with self.page.expect_response(
             lambda response: (
                 response.url == f"{BASE_URL}/pomidorqa/bookings"
                 and response.request.method == "POST"
             ),
             timeout=REQUEST_TIMEOUT_MS,
-        ):
+        ) as response_info:
             self.upcoming_by_id(booking_id).get_by_role(
                 "button", name="Отменить", exact=True
             ).click()
+        return response_info.value

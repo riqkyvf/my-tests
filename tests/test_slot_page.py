@@ -116,6 +116,67 @@ def test_slot_display_uses_owner_timezone_independently_of_browser(
 
 
 @allure.feature("Слоты")
+@allure.title("Новый слот создаётся в заранее выбранном часовом поясе профиля")
+def test_new_slot_uses_preselected_profile_timezone(user_factory):
+    with allure.step("Выбрать владельцу пояс Иркутска при московском поясе браузера"):
+        owner = user_factory("irkutsk-slot-owner", timezone_id="Europe/Moscow")
+        profile = ProfilePage(owner["page"])
+        profile.open()
+        profile.timezone_list.select_option(value="Asia/Irkutsk")
+        profile.save()
+        owner["page"].reload()
+        expect(profile.timezone_list).to_have_value("Asia/Irkutsk")
+        profile.add_skill("Python", "can_help")
+        expect(profile.saved_skill("Python", "can_help")).to_be_visible()
+
+    with allure.step("Создать будущий слот на начало суток в поясе профиля"):
+        slot_day = today_in_moscow() + timedelta(days=2)
+        slot_date = slot_day.isoformat()
+        slot_time = "00:20"
+        slots = SlotsPage(owner["page"])
+        slots.open()
+        slots.create_slot(slot_date, slot_time)
+        expect(slots.slot_cards).to_have_count(1)
+        slot_id = slots.slot_cards.get_attribute("data-slot-id")
+        assert slot_id, "У созданного слота отсутствует ID"
+        expected_datetime = f", {format_slot_date(slot_day)}, {slot_time}"
+        expect(slots.slot_by_id(slot_id)).to_have_attribute("data-slot-status", "free")
+        expect(slots.slot_by_id(slot_id)).to_contain_text(expected_datetime)
+
+    with allure.step("Проверить сохранение введённых даты и времени после перезагрузки"):
+        owner["page"].reload()
+        expect(slots.slot_by_id(slot_id)).to_contain_text(expected_datetime)
+
+    with allure.step("Открыть публичный профиль из браузера зрителя с поясом Владивостока"):
+        viewer = user_factory("irkutsk-slot-viewer", timezone_id="Asia/Vladivostok")
+        catalog = CatalogPage(viewer["page"])
+        catalog.open()
+        catalog.open_person(catalog.card_by_name(owner["user"]["name"]))
+        person = PersonPage(viewer["page"])
+        expect(person.slots_timezone).to_contain_text("Asia/Irkutsk")
+        person.day_button(slot_date).click()
+        expect(person.slot_button(slot_id)).to_have_text(slot_time)
+
+    with allure.step("Вернуть владельцу московский пояс и проверить исходный момент времени"):
+        profile.open()
+        profile.timezone_list.select_option(value="Europe/Moscow")
+        profile.save()
+        owner["page"].reload()
+        expect(profile.timezone_list).to_have_value("Europe/Moscow")
+        # 00:20 в Иркутске соответствует 19:20 предыдущего дня в Москве.
+        moscow_day = slot_day - timedelta(days=1)
+        slots.open()
+        expect(slots.slot_by_id(slot_id)).to_contain_text(
+            f", {format_slot_date(moscow_day)}, 19:20"
+        )
+        viewer["page"].reload()
+        expect(person.slots_timezone).to_contain_text("Europe/Moscow")
+        expect(person.day_button(slot_date)).to_have_count(0)
+        person.day_button(moscow_day.isoformat()).click()
+        expect(person.slot_button(slot_id)).to_have_text("19:20")
+
+
+@allure.feature("Слоты")
 @allure.title("Форма слотов запрещает прошедшую календарную дату")
 def test_slot_calendar_rejects_past_dates(page: Page, logged_in_page, slots_page):
     with allure.step("Проверить минимальную дату и отсутствие слотов"):
