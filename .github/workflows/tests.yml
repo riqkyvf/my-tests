@@ -1,0 +1,84 @@
+name: PomidorQA tests
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Не прерываем работающие тесты: фикстурам нужно завершить очистку аккаунтов.
+concurrency:
+  group: pomidorqa-tests-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Ruff and Chromium smoke tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Check lint
+        run: python -m ruff check .
+
+      - name: Check formatting
+        run: python -m ruff format --check .
+
+      - name: Set up Node.js for Allure
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Install Chromium and system dependencies
+        run: python -m playwright install --with-deps chromium
+
+      - name: Run smoke tests
+        id: tests
+        run: >-
+          python -m pytest
+          tests/test_login_page.py::test_login_with_valid_credentials
+          tests/test_booking.py::test_guest_books_host_slot_and_both_see_meeting
+          --browser chromium
+          --alluredir=allure-results
+          --clean-alluredir
+
+      - name: Generate Allure report
+        if: ${{ !cancelled() && hashFiles('allure-results/*-result.json') != '' }}
+        run: >-
+          npx --yes allure@3.21.0 awesome allure-results
+          --single-file
+          --output allure-report
+          --group-by feature
+          --report-language ru
+
+      - name: Upload Allure results
+        if: ${{ !cancelled() && hashFiles('allure-results/*-result.json') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-results
+          path: allure-results/
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload Allure HTML report
+        if: ${{ !cancelled() && hashFiles('allure-report/index.html') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-report
+          path: allure-report/
+          if-no-files-found: error
+          retention-days: 7
