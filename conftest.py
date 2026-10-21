@@ -1,6 +1,7 @@
 import uuid
 from datetime import date, timedelta
 
+import allure
 import pytest
 from playwright.sync_api import expect
 
@@ -43,9 +44,10 @@ def created_account(api_context):
     created = False
 
     try:
-        response = create_account(api_context, user)
-        created = response.status == 201
-        assert created, f"Создание аккаунта: HTTP {response.status}. {response.text()}"
+        with allure.step("Создать тестовый аккаунт через API"):
+            response = create_account(api_context, user)
+            created = response.status == 201
+            assert created, f"Создание аккаунта: HTTP {response.status}. {response.text()}"
 
         yield {
             "api_context": api_context,
@@ -56,10 +58,11 @@ def created_account(api_context):
             cookie["name"] == "pomidorqa_session"
             for cookie in api_context.storage_state()["cookies"]
         ):
-            response = delete_account(api_context)
-            assert response.status == 200, (
-                f"Удаление аккаунта: HTTP {response.status}. {response.text()}"
-            )
+            with allure.step("Удалить тестовый аккаунт через API"):
+                response = delete_account(api_context)
+                assert response.status == 200, (
+                    f"Удаление аккаунта: HTTP {response.status}. {response.text()}"
+                )
 
 
 @pytest.fixture
@@ -71,10 +74,11 @@ def registration_user(page):
         # Аккаунт создаёт UI-тест. Удаляем его и при падении проверки после регистрации.
         # При HTML-валидации сессия не появляется и удалять ещё нечего.
         if any(cookie["name"] == "pomidorqa_session" for cookie in page.context.cookies()):
-            response = delete_account(page.context.request)
-            assert response.status == 200, (
-                f"Удаление UI-аккаунта: HTTP {response.status}. {response.text()}"
-            )
+            with allure.step("Удалить зарегистрированный через UI аккаунт"):
+                response = delete_account(page.context.request)
+                assert response.status == 200, (
+                    f"Удаление UI-аккаунта: HTTP {response.status}. {response.text()}"
+                )
 
 
 @pytest.fixture
@@ -90,17 +94,18 @@ def user_factory(new_context):
         user = make_user_data(role)
         context = new_context(**context_options)
         # Учитываем попытку до запроса: сессия может появиться и при неожиданном ответе.
-        account = {"context": context, "created": False}
+        account = {"context": context, "created": False, "role": role}
         account_attempts.append(account)
 
-        response = create_account(context.request, user)
-        account["created"] = response.status == 201
+        with allure.step(f"Создать пользователя через API: {role}"):
+            response = create_account(context.request, user)
+            account["created"] = response.status == 201
 
-        assert account["created"], (
-            f"Создание пользователя {user['email']}: HTTP {response.status}. {response.text()}"
-        )
+            assert account["created"], (
+                f"Создание пользователя {user['email']}: HTTP {response.status}. {response.text()}"
+            )
 
-        page = context.new_page()
+            page = context.new_page()
 
         return {
             "user": user,
@@ -120,11 +125,14 @@ def user_factory(new_context):
                     cookie["name"] == "pomidorqa_session" for cookie in context.cookies()
                 ):
                     continue
-                response = delete_account(context.request)
+                with allure.step(
+                    f"Удалить подготовленного пользователя через API: {account['role']}"
+                ):
+                    response = delete_account(context.request)
 
-                assert response.status == 200, (
-                    f"Удаление пользователя: HTTP {response.status}. {response.text()}"
-                )
+                    assert response.status == 200, (
+                        f"Удаление пользователя: HTTP {response.status}. {response.text()}"
+                    )
             except Exception as error:
                 errors.append(str(error))
 
@@ -145,34 +153,38 @@ def available_person_factory(user_factory):
     ):
         person = user_factory(role, **context_options)
         profile = ProfilePage(person["page"])
-        profile.open()
+        with allure.step(f"Открыть профиль подготовленного участника: {role}"):
+            profile.open()
 
         if profile_data is not None:
-            profile.fill_text_data(
-                profile_data["name"], profile_data["telegram"], profile_data["bio"]
-            )
-            profile.save()
-            person["page"].reload()
-            expect(profile.name_input).to_have_value(profile_data["name"])
-            expect(profile.telegram_input).to_have_value(profile_data["telegram"])
-            expect(profile.about_info_input).to_have_value(profile_data["bio"])
+            with allure.step("Сохранить данные публикуемого профиля"):
+                profile.fill_text_data(
+                    profile_data["name"], profile_data["telegram"], profile_data["bio"]
+                )
+                profile.save()
+                person["page"].reload()
+                expect(profile.name_input).to_have_value(profile_data["name"])
+                expect(profile.telegram_input).to_have_value(profile_data["telegram"])
+                expect(profile.about_info_input).to_have_value(profile_data["bio"])
 
         for skill_type, skill_name in skills:
-            profile.add_skill(skill_name, skill_type)
-            expect(profile.saved_skill(skill_name, skill_type)).to_be_visible()
+            with allure.step(f"Добавить навык «{skill_name}» типа {skill_type}"):
+                profile.add_skill(skill_name, skill_type)
+                expect(profile.saved_skill(skill_name, skill_type)).to_be_visible()
 
         if slot_date is None:
             slot_date = (today_in_moscow() + timedelta(days=2)).isoformat()
-        slots = SlotsPage(person["page"])
-        slots.open()
-        expect(slots.date_input).to_be_visible()
-        expect(slots.slot_cards).to_have_count(0)
-        slots.create_slot(slot_date, slot_time)
-        expect(slots.slot_cards).to_have_count(1)
-        expect(slots.slot_cards).to_have_attribute("data-slot-status", "free")
-        expect(slots.slot_cards).to_contain_text(slot_time)
-        slot_id = slots.slot_cards.get_attribute("data-slot-id")
-        assert slot_id, "У подготовленного слота отсутствует ID"
+        with allure.step(f"Создать свободный слот участника: {slot_date} {slot_time}"):
+            slots = SlotsPage(person["page"])
+            slots.open()
+            expect(slots.date_input).to_be_visible()
+            expect(slots.slot_cards).to_have_count(0)
+            slots.create_slot(slot_date, slot_time)
+            expect(slots.slot_cards).to_have_count(1)
+            expect(slots.slot_cards).to_have_attribute("data-slot-status", "free")
+            expect(slots.slot_cards).to_contain_text(slot_time)
+            slot_id = slots.slot_cards.get_attribute("data-slot-id")
+            assert slot_id, "У подготовленного слота отсутствует ID"
 
         return {
             "person": person,
@@ -227,12 +239,13 @@ def slots_page(page):
 
 @pytest.fixture
 def logged_in_page(page, created_account, header):
-    api = created_account["api_context"]
-    cookies = api.storage_state()["cookies"]
-    page.context.add_cookies(cookies)
+    with allure.step("Подготовить авторизованный браузер из API-сессии"):
+        api = created_account["api_context"]
+        cookies = api.storage_state()["cookies"]
+        page.context.add_cookies(cookies)
 
-    page.goto(f"{BASE_URL}/pomidorqa")
-    expect(header.logout_button).to_be_visible()
+        page.goto(f"{BASE_URL}/pomidorqa")
+        expect(header.logout_button).to_be_visible()
 
     return page
 
@@ -264,26 +277,29 @@ def booked_slot_factory(available_person_factory, user_factory):
                 "slot_date": starts_at.date().isoformat(),
                 "slot_time": starts_at.strftime("%H:%M"),
             }
-        prepared = available_person_factory(
-            "cancel-host", [("can_help", skill_name)], **slot_options
-        )
+        with allure.step("Подготовить ведущего со свободным слотом"):
+            prepared = available_person_factory(
+                "cancel-host", [("can_help", skill_name)], **slot_options
+            )
         host = prepared["person"]
         if guest is None:
             guest = user_factory("cancel-guest")
 
-        catalog = CatalogPage(guest["page"])
-        catalog.open()
-        host_card = catalog.card_by_skill(skill_name)
-        expect(host_card).to_have_count(1)
-        person_id = host_card.get_attribute("data-person-id")
-        assert person_id, "У карточки участника отсутствует ID"
-        catalog.open_person(host_card)
+        with allure.step("Открыть профиль ведущего из каталога гостя"):
+            catalog = CatalogPage(guest["page"])
+            catalog.open()
+            host_card = catalog.card_by_skill(skill_name)
+            expect(host_card).to_have_count(1)
+            person_id = host_card.get_attribute("data-person-id")
+            assert person_id, "У карточки участника отсутствует ID"
+            catalog.open_person(host_card)
 
-        person = PersonPage(guest["page"])
-        person.select_slot(prepared["slot_date"], prepared["slot_time"])
-        expect(person.booking_slot_id).to_have_value(prepared["slot_id"])
-        success_message = person.confirm_booking_and_close()
-        assert "Забронировано!" in success_message
+        with allure.step("Забронировать подготовленный слот гостем"):
+            person = PersonPage(guest["page"])
+            person.select_slot(prepared["slot_date"], prepared["slot_time"])
+            expect(person.booking_slot_id).to_have_value(prepared["slot_id"])
+            success_message = person.confirm_booking_and_close()
+            assert "Забронировано!" in success_message
 
         return {
             "host": host,
@@ -310,18 +326,20 @@ def booked_meeting_factory(booked_slot_factory):
         host = prepared["host"]
         guest = prepared["guest"]
 
-        meetings = MeetingsPage(guest["page"])
-        meetings.open()
-        meeting = meetings.meeting_with(host["user"]["name"])
-        expect(meeting).to_have_count(1)
-        booking_id = meeting.get_attribute("data-booking-id")
-        assert booking_id, "У подготовленной встречи отсутствует ID"
+        with allure.step("Получить ID подготовленной встречи у гостя"):
+            meetings = MeetingsPage(guest["page"])
+            meetings.open()
+            meeting = meetings.meeting_with(host["user"]["name"])
+            expect(meeting).to_have_count(1)
+            booking_id = meeting.get_attribute("data-booking-id")
+            assert booking_id, "У подготовленной встречи отсутствует ID"
 
-        slots = SlotsPage(host["page"])
-        slots.open()
-        expect(slots.slot_by_id(prepared["slot_id"])).to_have_attribute(
-            "data-slot-status", "booked"
-        )
+        with allure.step("Проверить booked у исходного слота ведущего"):
+            slots = SlotsPage(host["page"])
+            slots.open()
+            expect(slots.slot_by_id(prepared["slot_id"])).to_have_attribute(
+                "data-slot-status", "booked"
+            )
         return {**prepared, "booking_id": booking_id}
 
     return create_meeting
@@ -334,38 +352,43 @@ def booked_meeting(booked_meeting_factory):
 
 @pytest.fixture
 def meetings_in_both_roles(booked_meeting_factory):
-    as_host = booked_meeting_factory()
+    with allure.step("Подготовить встречу общего участника в роли ведущего"):
+        as_host = booked_meeting_factory()
     participant = as_host["host"]
-    as_guest = booked_meeting_factory(
-        guest=participant, starts_at=now_in_moscow() + timedelta(days=3)
-    )
+    with allure.step("Подготовить встречу общего участника в роли гостя"):
+        as_guest = booked_meeting_factory(
+            guest=participant, starts_at=now_in_moscow() + timedelta(days=3)
+        )
     return {"participant": participant, "as_host": as_host, "as_guest": as_guest}
 
 
 @pytest.fixture
 def mixed_meetings(booked_meeting_factory):
     groups = []
-    for _ in range(2):
-        prepared = booked_meeting_factory()
+    for pair_number in range(1, 3):
+        with allure.step(f"Подготовить исходную встречу пары {pair_number}"):
+            prepared = booked_meeting_factory()
         host = prepared["host"]
         guest = prepared["guest"]
-        meetings = MeetingsPage(guest["page"])
-        meetings.open()
-        meetings.cancel_meeting(prepared["booking_id"])
-        expect(meetings.past_by_id(prepared["booking_id"])).to_contain_text("отменено")
+        with allure.step(f"Подготовить отменённую встречу пары {pair_number}"):
+            meetings = MeetingsPage(guest["page"])
+            meetings.open()
+            meetings.cancel_meeting(prepared["booking_id"])
+            expect(meetings.past_by_id(prepared["booking_id"])).to_contain_text("отменено")
 
         # Повторная бронь создаёт новую ближайшую встречу у той же пары участников.
-        person = PersonPage(guest["page"])
-        person.open(prepared["person_id"])
-        person.select_slot(prepared["slot_date"], prepared["slot_time"])
-        expect(person.booking_slot_id).to_have_value(prepared["slot_id"])
-        assert "Забронировано!" in person.confirm_booking_and_close()
-        meetings.open()
-        meeting = meetings.meeting_with(host["user"]["name"])
-        expect(meeting).to_have_count(1)
-        upcoming_id = meeting.get_attribute("data-booking-id")
-        assert upcoming_id, "У повторной встречи отсутствует ID"
-        assert upcoming_id != prepared["booking_id"], "Повторная бронь должна иметь новый ID"
+        with allure.step(f"Подготовить ближайшую встречу пары {pair_number} повторной бронью"):
+            person = PersonPage(guest["page"])
+            person.open(prepared["person_id"])
+            person.select_slot(prepared["slot_date"], prepared["slot_time"])
+            expect(person.booking_slot_id).to_have_value(prepared["slot_id"])
+            assert "Забронировано!" in person.confirm_booking_and_close()
+            meetings.open()
+            meeting = meetings.meeting_with(host["user"]["name"])
+            expect(meeting).to_have_count(1)
+            upcoming_id = meeting.get_attribute("data-booking-id")
+            assert upcoming_id, "У повторной встречи отсутствует ID"
+            assert upcoming_id != prepared["booking_id"], "Повторная бронь должна иметь новый ID"
         groups.append(
             {
                 "host": host,
@@ -388,10 +411,11 @@ def catalog_candidate(user_factory):
     unique_id = uuid.uuid4().hex[:8]
     participant = user_factory(f"candidate-{unique_id}")
     skill_name = f"catalog-{unique_id}"
-    profile = ProfilePage(participant["page"])
-    profile.open()
-    profile.add_skill(skill_name, "can_help")
-    expect(profile.saved_skill(skill_name, "can_help")).to_be_visible()
+    with allure.step("Добавить навык кандидату каталога без свободных слотов"):
+        profile = ProfilePage(participant["page"])
+        profile.open()
+        profile.add_skill(skill_name, "can_help")
+        expect(profile.saved_skill(skill_name, "can_help")).to_be_visible()
     return participant
 
 
@@ -429,21 +453,24 @@ def catalog_candidate_with_slot(available_person_factory):
 @pytest.fixture
 def public_profile_with_booked_slot(request, booked_slot):
     host = booked_slot["host"]
-    slots = SlotsPage(host["page"])
-    slots.open()
     same_day = getattr(request, "param", "different_days") == "same_day"
     free_day = date.fromisoformat(booked_slot["slot_date"])
     if not same_day:
         free_day += timedelta(days=1)
     free_date = free_day.isoformat()
     free_time = "12:10"
-    slots.create_slot(free_date, free_time)
-    expect(slots.slot_cards).to_have_count(2)
-    expect(slots.free_slot_cards).to_have_count(1)
-    expect(slots.free_slot_cards).to_contain_text(free_time)
-    expect(slots.slot_by_id(booked_slot["slot_id"])).to_have_attribute("data-slot-status", "booked")
-    free_id = slots.free_slot_cards.get_attribute("data-slot-id")
-    assert free_id, "У контрольного свободного слота отсутствует ID"
+    with allure.step("Добавить контрольный свободный слот владельцу с забронированным слотом"):
+        slots = SlotsPage(host["page"])
+        slots.open()
+        slots.create_slot(free_date, free_time)
+        expect(slots.slot_cards).to_have_count(2)
+        expect(slots.free_slot_cards).to_have_count(1)
+        expect(slots.free_slot_cards).to_contain_text(free_time)
+        expect(slots.slot_by_id(booked_slot["slot_id"])).to_have_attribute(
+            "data-slot-status", "booked"
+        )
+        free_id = slots.free_slot_cards.get_attribute("data-slot-id")
+        assert free_id, "У контрольного свободного слота отсутствует ID"
     return {
         "host": host,
         "person_id": booked_slot["person_id"],
@@ -527,16 +554,17 @@ def person_with_multiple_free_slots(available_person_factory):
     created = [{"id": prepared["slot_id"], "date": planned[0][0], "time": planned[0][1]}]
 
     for slot_date, slot_time in planned[1:]:
-        previous_ids = set(slots.slot_ids())
-        slots.create_slot(slot_date, slot_time)
-        expect(slots.slot_cards).to_have_count(len(created) + 1)
-        new_ids = set(slots.slot_ids()) - previous_ids
-        assert len(new_ids) == 1, "Должен появиться ровно один новый слот"
-        slot_id = next(iter(new_ids))
-        expect(slots.slot_by_id(slot_id)).to_have_attribute("data-slot-status", "free")
-        expected_date = format_slot_date(date.fromisoformat(slot_date))
-        expect(slots.slot_by_id(slot_id)).to_contain_text(f", {expected_date}, {slot_time}")
-        created.append({"id": slot_id, "date": slot_date, "time": slot_time})
+        with allure.step(f"Добавить следующий свободный слот участника: {slot_date} {slot_time}"):
+            previous_ids = set(slots.slot_ids())
+            slots.create_slot(slot_date, slot_time)
+            expect(slots.slot_cards).to_have_count(len(created) + 1)
+            new_ids = set(slots.slot_ids()) - previous_ids
+            assert len(new_ids) == 1, "Должен появиться ровно один новый слот"
+            slot_id = next(iter(new_ids))
+            expect(slots.slot_by_id(slot_id)).to_have_attribute("data-slot-status", "free")
+            expected_date = format_slot_date(date.fromisoformat(slot_date))
+            expect(slots.slot_by_id(slot_id)).to_contain_text(f", {expected_date}, {slot_time}")
+            created.append({"id": slot_id, "date": slot_date, "time": slot_time})
 
     return {"person": person, "slots": created}
 
